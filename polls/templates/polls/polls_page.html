@@ -1,0 +1,121 @@
+{% load staticfiles %}
+<!-- Template for a user's POLLS_PAGE, which lists all of the polls that user has created. -->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="{% static 'polls/darkly.css' %}"/>
+	<script src="{% static 'polls/jquery-1.11.2.min.js' %}"></script>
+	<script src="{% static 'polls/bootstrap.min.js' %}"></script>
+	<title>{{user.username}}'s Polls</title>
+</head>
+<body>
+	<div class="jumbotron">
+		<div class="container">
+			<h1>{{user.username}}'s Polls</h1>
+		</div>
+		<!-- Only the user to which the polls page belongs can create and remove polls. And only users of Pollsite can log out and vote. The
+		POLLS_PAGE view pointing to this template accounts for these permissions and sends them as context (can_create and can_vote). -->
+		{% if can_vote %}
+		<div class="container">
+			<row>
+				<!-- Button to create a poll. Leads to MAKE_POLL view. Only for the owner of the current polls page. -->
+				<div class="col-xs-4">
+					{% if can_create %}
+						<a href="{% url 'polls:make_poll' user.id %}" role="button" class="btn btn-primary btn-lg btn-block">Create a new poll</a>
+					{% endif %}
+				</div>
+				<!-- Button to remove a poll. Discussed more below -->
+				<div class="col-xs-4">
+					{% if can_create %}
+						<button class="btn btn-primary btn-lg btn-block" id="remove">Remove a poll</button>
+					{% endif %}
+				</div>
+				<!-- Logout button leading back to PROCESSING_LOGOUT in the USERS app. -->
+				<div class="col-xs-4">
+					<a href="{% url 'users:processing_logout' %}" role="button" class="btn btn-primary btn-lg btn-block">Logout</a>
+				</div>
+			</row>
+		</div>
+		{% endif %}
+	</div>
+	<!-- Users will see a success message if they successfully vote in a poll (which redirects them to their polls page). They will see warnings if they
+	try to access pages of other users that they are not authorized to view. -->
+	<div class="container">
+		{% if messages %}
+			{% for message in messages %}
+				{% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+					<p class="bg bg-success">{{message}}</p>
+				{% else %}
+					<p class="bg bg-warning">{{message}}</p>
+				{% endif %}
+			{% endfor %}
+		{% endif %}
+		<!-- The following is a search bar that lets users search for other Pollsite users by username or actual name. Input is processed by the
+		PROCESS_SEARCH view. -->
+		<row>
+			<div class="col-xs-7">
+			</div>
+			<div class="col-xs-5">
+				<form class="navbar-form navbar-left" role="search" action="{% url 'polls:process_search' user.id %}" method="get">
+					<div class="form-group">
+						<input type="text" class="form-control" name="search" placeholder="Search full name/username"/>
+					</div>
+					<button type="submit" class="btn btn-primary">Search</button>
+				</form>
+			</div>
+		</row>
+		<!-- The table of polls that the owner of this poll page has made; for each poll, it shows the poll's question text, publication date,
+		total number of votes, and a link for the current session's user to vote as well. -->
+		<table class="table table-hover">
+				<thead>
+					<th>Question</th>
+					<th>Date published</th>
+					<th>Votes</th>
+					<th>Vote now!</th>
+					<th class="remove">Remove</th>
+				</thead>
+				<tbody>
+					{% if not user.question_set.all %}
+						<tr class="info">
+							<td colspan="4" style="text-align:center">No polls yet!</td>
+						</tr>
+					{% else %}
+						{% for poll in questions_list %}
+							<tr class="info">
+								<td>{{poll.text}}</td>
+								<td>{{poll.date_published}}</td>
+								<td>{{poll.total_votes}}</td>
+								<td><a href={% if not can_vote %}"{% url 'users:signup' %}"{% else %}"{% url 'polls:vote_poll' poll.id %}"{% endif %}>Vote</a></td> <!-- If the current session's viewer has not signed up for Pollsite, he/she cannot vote and will be redirected to the signup page (the SIGNUP view in the USERS app. Otherwise, the user is redirected to a voting page for the desired poll (VOTE_POLL view). -->
+								<td><a href="{% url 'polls:process_remove' poll.id user.id %}" class="remove">Remove</a></td>
+							</tr>
+						{% endfor %}
+					{% endif %}
+				</tbody>
+		</table>
+		<!-- JS for the remove feature (only available) if the current user is the owner of this polls page (can_create). Clicking on the Remove button will toggle the ability to remove polls (the table cells with class "remove" above). Clicking on one of these cells will redirect to a PROCESS_REMOVE view. -->
+		<script>
+			$(document).ready(function() {
+				$('.remove').hide();
+			})
+		</script>
+		{% if can_create %}
+			<script>
+				$(document).ready(function() {
+					var $clicked = true;
+					$('#remove').click(function() {
+						if ($clicked) {
+							$('.remove').show();
+							$clicked = false;
+						}
+						else {
+							$('.remove').hide();
+							$clicked = true;
+						}
+					})
+				})
+			</script>
+		{% endif %}
+	</div>
+</body>
+</html>

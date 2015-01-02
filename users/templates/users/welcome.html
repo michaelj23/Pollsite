@@ -1,0 +1,28 @@
+{% load staticfiles %}
+<!-- Template for a logged-in user's WELCOME page, which is also, in Pollsite's case, the gateway to his/her polls. -->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="{% static 'users/darkly.css' %}"/>
+	<script src="{% static 'users/jquery-1.11.2.min.js' %}"></script>
+	<script src="{% static 'users/bootstrap.min.js' %}"></script>
+	<title>{{user.username}} Gateway</title>
+</head>
+<body>
+	<div class="jumbotron">
+		<div class="container">
+			<h1>Welcome, {{user.username}}!</h1>
+			<!-- Buttons for polls, which leads to the POLLS app's POLLS_PAGE, and logging out, which leads to this app's PROCESSING_LOGOUT process. -->
+			<row>
+				<div class="col-xs-6">
+					<a href="{% url 'polls:polls_page' user.id %}" role="button" class="btn btn-primary btn-lg btn-block">Head to your polls</a>
+				</div>
+				<div class="col-xs-6">
+					<a href="{% url 'users:processing_logout' %}" role="button" class="btn btn-primary btn-lg btn-block">Logout</a>
+				</div>
+			</row>
+		</div>
+	</div>	
+</body>
+</html>

@@ -1,0 +1,78 @@
+{% load staticfiles %}
+<!-- Template for the VOTE_POLL page, which shows the target poll's question text, choices to pick from, and visual renderings of each choice's number of votes. -->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="{% static 'polls/darkly.css' %}"/>
+	<script src="{% static 'polls/jquery-1.11.2.min.js' %}"></script>
+	<script src="{% static 'polls/bootstrap.min.js' %}"></script>
+	<title>Poll Voting</title>
+</head>
+<body>
+	<div class="jumbotron">
+		<div class="container">
+			<h1>{{question.text}}</h1>
+		</div>
+	</div>
+	<!-- A warning message appears if the user does not select a choice before submitting the vote form. -->
+	{% if error_message %}
+		<div class="container">
+			<p class="bg bg-warning">{{error_message}}</p>
+		</div>
+	{% endif %}
+	<div class="container">
+		<!-- The vote form, which shows each of the poll's Choices as a radio button, along with a progress bar to display the popularity of each Choice. If the current session user has voted in this poll before, his/her previous Choice will be selected at the page's initial display. Otherwise, no Choice will be selected. The form redirects on submission to the PROCESSING_VOTE view.-->
+		<form action="{% url 'polls:processing_vote' question.id %}" method="post" id="voteform">
+			{% csrf_token %}
+			{% for choice in question.choice_set.all %}
+				<row>
+					<div class="col-xs-12">
+						<div class="radio">
+							<label>
+								<input class="choices" type="radio" name="choice" value="{{choice.id}}" {% if choice.id == selected_choice_id %}checked{% endif %}/> {{choice.choice_text}}
+							</label>
+						</div>
+						<div class="progress">
+							<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="{{choice.votes}}" aria-valuemin="0" aria-valuemax="{{question.total_votes}}" style="width: {% if question.total_votes == 0 %}0{% else %}{% widthratio choice.votes question.total_votes 100 %}{% endif %}%" id="{{choice.id}}">{{choice.votes}}</div>
+						</div>
+					</div>
+				</row>
+			{% endfor %}
+			<button type="submit" class="btn btn-success">Vote</button>
+		</form>
+	</div>
+	<!-- The following script powers the animation behind the Choice's progress bars, which are supposed to adjust based on the user's selection of the radio buttons. When selecting a new Choice, the progress bar of the previous Choice the user selected goes down by 1 vote (expressed in percents) and that of the new selected Choice goes up by 1 vote. Also note that if there is already a selected Choice at the page's initial display(meaning the user has voted in this poll before), the total number of Votes (totalVotes) used to calculate the width of progress bars remains the same as the poll/question's curent total number of votes, as opposed to being set to the current total number of votes + 1. In other words, a user CANNOT have more than one vote per poll. -->
+	<script>
+		$(document).ready(function() {
+			var current = $('input[name=choice]:checked', '#voteform').val();
+			if (current == null) {
+				var totalVotes = Number($('.progress-bar').attr('aria-valuemax')) + 1;
+			}
+			else {
+				var totalVotes = Number($('.progress-bar').attr('aria-valuemax'));
+			}
+			$('.choices').change(function() {
+				var next = $('input[name=choice]:checked', '#voteform').val();
+				var nextid = '#' + next;
+				$(nextid).attr({
+				 	'aria-valuenow': String(Number($(nextid).attr('aria-valuenow'))+1)
+				});
+				$(nextid).html(String(Number($(nextid).html())+1));
+				if (current != null) {
+					var former = '#' + current;
+					$(former).attr({
+						'aria-valuenow': String(Number($(former).attr('aria-valuenow'))-1)
+					});
+					$(former).html(String(Number($(former).html())-1));
+				}
+				{% for choice in question.choice_set.all %}
+					var id = '#' + String({{choice.id}});
+					$(id).css('width', String(100 * Number($(id).html())/totalVotes) + '%');
+				{% endfor %}
+				current = next;
+			})
+		})
+	</script>
+</body>
+</html>

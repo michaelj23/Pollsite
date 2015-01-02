@@ -1,0 +1,74 @@
+{% load staticfiles %}
+<!--The front page template for the target website using this USERS app (in this case Pollsite)-->
+<html lang-"en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="{% static 'users/darkly.css' %}"/>
+	<script src="{% static 'users/jquery-1.11.2.min.js' %}"></script>
+	<script src="{% static 'users/bootstrap.min.js' %}"></script>
+	<title>Welcome to Pollsite</title>
+</head>
+<body>
+	<div class="jumbotron">
+		<div class="container">
+			<h1>Welcome to Pollsite!</h1>
+			<p>Get started with the most convenient way to poll your friends by logging in or creating an account below.</p>
+		</div>
+	</div>
+
+	<div class="container">
+		<row>
+			<!--Login button, which toggles the login form below-->
+			<div class="col-xs-6">
+				<button class="btn btn-primary btn-lg btn-block" id="login">Log in</button>
+				<script>
+					$(document).ready(function() {
+						$('#loginform').hide();
+						var $clicks = true;
+						$('#login').click(function() {
+							if ($clicks) {
+								$('#loginform').show();
+								$clicks = false;
+							}
+							else {
+								$('#loginform').hide();
+								$clicks = true;
+							}
+						})
+					})
+				</script>
+			</div>
+			<!--Sign up button leading to SIGNUP, the view for the sign up page-->
+			<div class="col-xs-6">
+				<a href="{% url 'users:signup' %}" role="button" class="btn btn-primary btn-lg btn-block">Sign up</a>
+			</div>
+		</row>
+	</div>
+	</br>
+	<!--Login form, leads to PROCESSING_LOGIN, a view that authenticates the attempted login-->	
+	<div class="container" id="loginform">
+		<row>
+			<form class="form-inline" action="{% url 'users:processing_login' %}" method="get">
+				<div class="form-group">
+					<label class="sr-only" for="userName">Username</label>
+					<input type="text" class="form-control" id="userName" name="username" placeholder="Enter username"/>
+				</div>
+				<div class="form-group">
+					<label class="sr-only" for="passWord">Password</label>
+					<input type="password" class="form-control" id="passWord" name="password" placeholder="Enter password"/>
+				</div>
+				<button type="submit" class="btn btn-success">Log in</button>
+			</form>
+		</row>
+	</div>
+	<!-- A site visitor attempting to login/view pages requiring a site account without signing up will be redirected to this front page and see a warning message. -->
+	{% if messages %}
+		{% for message in messages %}
+			<div class="container">
+				<p class="bg bg-warning">{{message}}</p>
+			</div>
+		{% endfor %}
+	{% endif %}
+</body>
+</html>

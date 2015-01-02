@@ -1,0 +1,65 @@
+{% load staticfiles %}
+<!-- Template for the MAKE_POLL page, where users can create new poll questions and choices for their own polls page. -->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="{% static 'polls/darkly.css' %}"/>
+	<script src="{% static 'polls/jquery-1.11.2.min.js' %}"></script>
+	<script src="{% static 'polls/bootstrap.min.js' %}"></script>
+	<title>Create a Poll</title>
+</head>
+<body>
+	<div class="jumbotron">
+		<div class="container">
+			<h1>Make your own poll!</h1>
+		</div>
+	</div>
+	<!-- An error messages shows if the user does not fill in all required fields. -->
+	{% if error_message %}
+		<div class="container">
+			<p class="bg bg-warning">{{error_message}}</p>
+		</div>
+	{% endif %}
+	<!-- Form for poll creation. Includes fields for question text, number of poll choices, and text for each choice. Redirects on submission to CREATING_POLL view, which processes user input. -->
+	<div class="container">
+		<form action="{% url 'polls:creating_poll' user.id %}" method="post">
+			{% csrf_token %}
+			<!-- Question text field -->
+			<div class="form-group">
+				<label for="question">What's your poll asking?</label>
+				<textarea class="form-control" rows="3" id="question" name="question" placeholder="Enter your poll question here"></textarea>
+			</div>
+			<!-- Selection feature to select number of choices (max 10). Powered by JQuery -->
+			<label for="selection">How many choices for this poll?</label>
+			<select class="form-control" id="selection" name="selection">
+				<script>
+					$(document).ready(function() {
+						for (var i=1; i<=10; i++) {
+							$('#selection').append('<option>'+String(i)+'</option>');
+						}
+						
+					})
+				</script>
+			</select>
+			</br>
+			<!-- The following JS script makes the number of choice text fields dynamic and based on the user's selection above. -->
+			<div id="choices">
+			</div>
+			<script>
+				$(document).ready(function() {
+					$('#selection').change(function() {
+						$('#choices').empty();
+						var $numChoices = Number($('select option:selected').text());
+						for (var j=1; j<=$numChoices; j++) {
+							$('#choices').append('<div class="form-group"><label for="choice' + String(j) + '">Choice ' + String(j) + '</label><input class="form-control" id="choice' + String(j) + '" name="choice' + String(j) + '" placeholder="Enter your choice text here"/>');
+						}
+					})
+					$('#selection').trigger('change');
+				})
+			</script>
+			<button type="submit" class="btn btn-success">Create Poll</button>
+		</form>
+	</div>
+</body>
+</html>
