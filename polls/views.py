@@ -7,6 +7,8 @@ from django.contrib import messages
 from polls.models import Question, Choice, DictforQuestion, Keyvalue
 from django.utils import timezone
 
+#Views for the POLLS app for Pollsite.
+
 def verify_authenticated(request, user_id):
 	# Helper function for the following views. It makes sure that the current session's user matches the user to which the desired page belongs.
 	# This way, users are unable to make/remove polls for other users. If the users don't match, the view redirects either to Pollsite's front INDEX

@@ -5,6 +5,7 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 
+#Views for the USERS app.
 
 # Create your views here.
 def index(request):
