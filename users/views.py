@@ -40,7 +40,7 @@ def processing_signup(request):
 		error_message = False
 	if error_message:
 		return render(request, 'users/signup.html', {'error_message': error_message})
-	user = User.objects.create_user(username, emailaddress, password, first_name=firstname, last_name=lastname) #, firstname, lastname)
+	user = User.objects.create_user(username, emailaddress, password, first_name=firstname, last_name=lastname)
 	user.save()
 	user = authenticate(username=username, password=password)
 	login(request, user)
