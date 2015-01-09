@@ -6,28 +6,38 @@ from users import views
 
 # Create your tests here.
 # Tests for the user authentication/authorization application.
-def make_user():
-	username="QB"
-	email="joe@gmail.com"
-	password="imthebest"
-	user = User.objects.create_user(username, email, password, first_name="Joe", last_name="Montana")
+
+# Bogus credentials used for tests
+username = 'QB'
+email = 'joe@gmail.com'
+password = 'imthebest'
+firstname = 'Joe'
+lastname = 'Montana'
+
+def make_user(is_active):
+	# Helper function used to create a sample user, whose is_active attribute is determined by the function argument.
+	user = User.objects.create_user(username, email, password, first_name=firstname, last_name=lastname)
+	user.is_active = is_active
 	user.save()
 	return user
 
-dict_credentials = {'firstname': 'Joe', 'lastname': 'Montana', 'emailaddress': 'joe@gmail.com', 'username': 'QB', 'password': 'imthebest'}
+# Bogus credentials in dictionary form.
+dict_credentials = {'firstname': firstname, 'lastname': lastname, 'emailaddress': email, 'username': username, 'password': password}
 
 def attempt_signup(testcase, creds):
+	# Helper function to simulate signing up.
 	return testcase.client.post(reverse('users:processing_signup'), creds, follow=True)
 
 def attempt_login(testcase, creds):
+	# Helper function to simulate logging in.
 	return testcase.client.get(reverse('users:processing_login'), creds, follow=True)
 
 
 class UserTests(TestCase):
 	def setUp(self):
-		# Set up a request factory for the following tests.
+		# Set up a request factory for the following tests. Note that setUp is called before EVERY test.
 		self.factory = RequestFactory()
-		self.user = make_user()
+		self.user = make_user(True)
 	def test_index_view(self):
 		# Check that the index view works.
 		response = self.client.get(reverse('users:index'))
@@ -75,11 +85,12 @@ class UserTests(TestCase):
 		response = attempt_login(self, {'username': 'Bad', 'password': 'Credentials'})
 		self.assertContains(response, 'The username or password you entered is incorrect.', status_code=200)
 
-	# def test_log_in_with_inactive_acccount(self):
-	# 	# Check that a log in with an inactive account leads back to the index page with an error message.
-	# 	self.user.is_active = False
-	# 	response = attempt_login(self, {'username': 'QB', 'password': 'imthebest'})
-	# 	self.assertContains(response, 'This account is inactive.', status_code=200)
+	def test_log_in_with_inactive_acccount(self):
+		# Check that a log in with an inactive account leads back to the index page with an error message.
+		self.user.delete()
+		self.user = make_user(False)
+		response = attempt_login(self, {'username': 'QB', 'password': 'imthebest'})
+		self.assertContains(response, 'This account is inactive.', status_code=200)
 
 	def test_unauthorized_welcome_as_nonmember(self):
 		# Check that trying to access another user's welcome page as a non-member leads back to the index with an error message.
