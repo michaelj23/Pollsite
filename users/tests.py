@@ -7,7 +7,7 @@ from users import views
 # Create your tests here.
 # Tests for the user authentication/authorization application.
 
-# Bogus credentials used for tests
+# Credentials used for tests
 username = 'QB'
 email = 'joe@gmail.com'
 password = 'imthebest'
@@ -21,8 +21,11 @@ def make_user(is_active):
 	user.save()
 	return user
 
-# Bogus credentials in dictionary form.
-dict_credentials = {'firstname': firstname, 'lastname': lastname, 'emailaddress': email, 'username': username, 'password': password}
+# Credentials in dictionary form for signing up.
+signup_creds = {'firstname': firstname, 'lastname': lastname, 'emailaddress': email, 'username': username, 'password': password}
+
+# Credentials for logging in.
+login_creds = {'username': username, 'password': password}
 
 def attempt_signup(testcase, creds):
 	# Helper function to simulate signing up.
@@ -50,7 +53,7 @@ class UserTests(TestCase):
 
 	def test_successful_signup(self):
 		# Check that a successful signup redirects to welcome page.
-		another_user = dict(dict_credentials)
+		another_user = dict(signup_creds)
 		another_user['username'] = 'anotherQB'
 		another_user['emailaddress'] = 'anotherjoe@gmail.com'
 		response = attempt_signup(self, another_user)
@@ -58,26 +61,26 @@ class UserTests(TestCase):
 
 	def test_failed_signup_with_missing_fields(self):
 		# Check that a signup missing fields redirects back to the signup page with an error message.
-		missing_creds = dict(dict_credentials)
+		missing_creds = dict(signup_creds)
 		missing_creds['firstname'] = ''
 		response = attempt_signup(self, missing_creds)
 		self.assertContains(response, 'You forgot to fill in some fields.', status_code=200)
 
 	def test_failed_signup_with_taken_username(self):
 		# Check that a signup with a taken username redirects back to the signup page with an error message.
-		response = attempt_signup(self, dict_credentials)
+		response = attempt_signup(self, signup_creds)
 		self.assertContains(response, 'This username is taken.', status_code=200)
 
 	def test_failed_signup_with_taken_email(self):
 		# Check that a signup with a taken email redirects back to the signup page with an error message.
-		taken_email = dict(dict_credentials)
+		taken_email = dict(signup_creds)
 		taken_email['username'] = 'notQB' # so that the error is for a taken email, not username
 		response = attempt_signup(self, taken_email)
 		self.assertContains(response, 'There is already an account associated with this email.', status_code=200)
 
 	def test_successful_log_in(self):
 		# Check that a log in with good credentials leads to the welcome page.
-		response = attempt_login(self, {'username': 'QB', 'password': 'imthebest'})
+		response = attempt_login(self, login_creds)
 		self.assertContains(response, 'Welcome, QB!', status_code=200)
 
 	def test_log_in_with_bad_credentials(self):
@@ -89,7 +92,7 @@ class UserTests(TestCase):
 		# Check that a log in with an inactive account leads back to the index page with an error message.
 		self.user.delete()
 		self.user = make_user(False)
-		response = attempt_login(self, {'username': 'QB', 'password': 'imthebest'})
+		response = attempt_login(self, login_creds)
 		self.assertContains(response, 'This account is inactive.', status_code=200)
 
 	def test_unauthorized_welcome_as_nonmember(self):
@@ -100,7 +103,8 @@ class UserTests(TestCase):
 
 	def test_unauthorized_welcome_as_member(self):
 		# Check that trying to access another user's welcome page as a registered member leads back to your own polls page with an error message.
-		another_user = dict(dict_credentials)
+		# Note that this test depends on the app with which this users app is coupled (in this case a polls app for Pollsite).
+		another_user = dict(signup_creds)
 		another_user['username'] = 'notherQb'
 		another_user['emailaddress'] = 'notherjoe@gmail.com'
 		attempt_signup(self, another_user)
@@ -111,13 +115,13 @@ class UserTests(TestCase):
 
 	def test_index_as_logged_in(self):
 		# Check that trying to access the index page when you are logged in redirects you to your welcome page.
-		attempt_login(self, {'username': 'QB', 'password': 'imthebest'})
+		attempt_login(self, login_creds)
 		response = self.client.get(reverse('users:index'), follow=True)
 		self.assertContains(response, 'Welcome, QB!', status_code=200)
 
 	def test_logout(self):
 		# Check that the logging out returns the previous user to the index page.
-		attempt_login(self, {'username': 'QB', 'password': 'imthebest'})
+		attempt_login(self, login_creds)
 		response = self.client.get(reverse('users:processing_logout'), follow=True)
 		self.assertContains(response, 'Welcome to Pollsite', status_code=200)
 
