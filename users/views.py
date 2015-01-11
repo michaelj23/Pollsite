@@ -79,16 +79,12 @@ def processing_logout(request):
 	return HttpResponseRedirect(reverse('users:index'))
 
 def process_search(request, user_id):
-	# View for processing a search query (search bar in a user's polls page). If the query matches an existing user's username or full name,
+	# View for processing a search query (search bar in a user's polls page). If the query matches an existing user's username,
 	# the view redirects to THAT user's polls page. Otherwise, it redirects to the current session user's polls page with an error message.
 	search_query = request.GET['search']
 	try:
 		user = User.objects.get(username=search_query)
 	except User.DoesNotExist:
-		names = [user.first_name + ' ' + user.last_name for user in User.objects.all()]
-		if search_query not in names:
-			messages.add_message(request, messages.INFO, "The user you're looking for could not be found.")
-			return HttpResponseRedirect(reverse('polls:polls_page', args=(user_id,)))
-		search_query = search_query.split()
-		user = User.objects.get(first_name=search_query[0], last_name=search_query[1])
+		messages.add_message(request, messages.INFO, "The user you're looking for could not be found.")
+		return HttpResponseRedirect(reverse('polls:polls_page', args=(user_id,)))
 	return HttpResponseRedirect(reverse('polls:polls_page', args=(user.id,)))
