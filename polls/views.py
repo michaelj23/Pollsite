@@ -106,7 +106,7 @@ def processing_vote(request, question_id):
 	try:
 		selected_choice = question.choice_set.get(pk=request.POST['choice'])
 	except (KeyError, Choice.DoesNotExist):
-		return render(request, 'polls/vote_poll.html', {'question': question, 'selected_choice_id': None, 'error_message': "You didn't select an available choice."})
+		return render(request, 'polls/vote_poll.html', {'question': question, 'selected_choice_id': None, 'error_message': "You did not select an available choice."})
 	keyvalues = DictforQuestion.objects.get(question=question).keyvalue_set
 	if request.user.id not in [keyvalue.key for keyvalue in keyvalues.all()]:
 		question.total_votes += 1

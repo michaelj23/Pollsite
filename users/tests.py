@@ -125,3 +125,16 @@ class UserTests(TestCase):
 		response = self.client.get(reverse('users:processing_logout'), follow=True)
 		self.assertContains(response, 'Welcome to Pollsite', status_code=200)
 
+	def test_successful_search(self):
+		# Check that successfully finding a user by username redirects to their polls page.
+		# This test also depends on the coupled app for the redirection.
+		another_user = dict(signup_creds)
+		another_user['username'] = 'notherQb'
+		another_user['emailaddress'] = 'notherjoe@gmail.com'
+		attempt_signup(self, another_user)
+		attempt_login(self, login_creds)
+		url = reverse('users:process_search', args=(self.user.id,))
+		response = self.client.get(url, {'search': 'notherQb'}, follow=True)
+		self.assertContains(response, "notherQb's Polls", status_code=200)
+
+
