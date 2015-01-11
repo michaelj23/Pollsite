@@ -8,5 +8,4 @@ urlpatterns = patterns('',
 	url(r'^(?P<question_id>\d+)/(?P<user_id>\d+)/process_remove/$', views.process_remove, name='process_remove'),
 	url(r'^(?P<question_id>\d+)/vote_poll/$', views.vote_poll, name='vote_poll'),
 	url(r'^(?P<question_id>\d+)/processing_vote/$', views.processing_vote, name='processing_vote'),
-	url(r'^/process_search/from/(?P<user_id>\d+)/$', views.process_search, name='process_search'),
 )
